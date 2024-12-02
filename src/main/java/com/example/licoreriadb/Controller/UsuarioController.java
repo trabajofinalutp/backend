@@ -1,18 +1,22 @@
 package com.example.licoreriadb.Controller;
 
+import com.example.licoreriadb.Util.jwtUtil;
 import com.example.licoreriadb.Model.Usuario;
 import com.example.licoreriadb.Service.CustomUserDetailsService;
 import com.example.licoreriadb.Service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestBody;
+
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
+
+    @Autowired
+    private jwtUtil jwtUtil;
 
     @Autowired
     private UsuarioService usuarioService;
@@ -33,6 +37,7 @@ public class UsuarioController {
 
     @PostMapping
     public Usuario createUsuario(@RequestBody Usuario usuario) {
+        usuario.setPassword(jwtUtil.encodePassword(usuario.getPassword()));
         return customUserDetailsService.saveUser(usuario);
     }
 
@@ -46,9 +51,13 @@ public class UsuarioController {
             updatedUsuario.setTelefono(usuarioDetails.getTelefono());
             updatedUsuario.setRole(usuarioDetails.getRole());
             updatedUsuario.setActivo(usuarioDetails.getActivo());
-            updatedUsuario.setPassword(usuarioDetails.getPassword());
-            customUserDetailsService.saveUser(updatedUsuario);
-            return ResponseEntity.ok(updatedUsuario);
+
+            if (usuarioDetails.getPassword() != null && !jwtUtil.matchesPassword(usuarioDetails.getPassword(), updatedUsuario.getPassword())) {
+                updatedUsuario.setPassword(jwtUtil.encodePassword(usuarioDetails.getPassword()));  // Si la contraseña cambió, la encriptas
+            }
+
+            Usuario savedUsuario = customUserDetailsService.saveUser(updatedUsuario);
+            return ResponseEntity.ok(savedUsuario);
         } else {
             return ResponseEntity.notFound().build();
         }
