@@ -18,6 +18,7 @@ public class Egreso {
     private BigDecimal monto;
 
     @Column(name = "fecha_egreso", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private LocalDate fechaEgreso;
+    private LocalDate fechaEgreso = LocalDate.now(); // Initialize with current date
+
 
 }
