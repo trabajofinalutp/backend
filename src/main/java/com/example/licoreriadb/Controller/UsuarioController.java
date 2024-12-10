@@ -43,24 +43,28 @@ public class UsuarioController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Usuario> updateUsuario(@PathVariable Integer id, @RequestBody Usuario usuarioDetails) {
-        Optional<Usuario> usuario = usuarioService.findById(id);
-        if (usuario.isPresent()) {
-            Usuario updatedUsuario = usuario.get();
-            updatedUsuario.setNombre(usuarioDetails.getNombre());
-            updatedUsuario.setCorreo(usuarioDetails.getCorreo());
-            updatedUsuario.setTelefono(usuarioDetails.getTelefono());
-            updatedUsuario.setRole(usuarioDetails.getRole());
-            updatedUsuario.setActivo(usuarioDetails.getActivo());
+        Optional<Usuario> usuarioOptional = usuarioService.findById(id);
+        if (usuarioOptional.isPresent()) {
+            Usuario existingUsuario = usuarioOptional.get();
 
-            if (usuarioDetails.getPassword() != null && !jwtUtil.matchesPassword(usuarioDetails.getPassword(), updatedUsuario.getPassword())) {
-                updatedUsuario.setPassword(jwtUtil.encodePassword(usuarioDetails.getPassword()));  // Si la contraseña cambió, la encriptas
+            // Update basic fields
+            existingUsuario.setNombre(usuarioDetails.getNombre());
+            existingUsuario.setCorreo(usuarioDetails.getCorreo());
+            existingUsuario.setTelefono(usuarioDetails.getTelefono());
+            existingUsuario.setRole(usuarioDetails.getRole());
+            existingUsuario.setActivo(usuarioDetails.getActivo());
+
+            // Password handling - do not touch password if not provided in request
+            String newPassword = usuarioDetails.getPassword();
+            if (newPassword != null && !newPassword.trim().isEmpty()) {
+                existingUsuario.setPassword(jwtUtil.encodePassword(newPassword));
             }
+            // If no password provided, keep existing encrypted password unchanged
 
-            Usuario savedUsuario = customUserDetailsService.saveUser(updatedUsuario);
+            Usuario savedUsuario = usuarioService.save(existingUsuario);
             return ResponseEntity.ok(savedUsuario);
-        } else {
-            return ResponseEntity.notFound().build();
         }
+        return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")

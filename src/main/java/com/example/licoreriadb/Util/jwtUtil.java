@@ -1,5 +1,4 @@
 package com.example.licoreriadb.Util;
-
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -52,11 +51,9 @@ public class jwtUtil {
     public boolean isTokenExpired(String token) {
         return extractAllClaims(token).getExpiration().before(new Date());
     }
-
     public String encodePassword(String rawPassword) {
         return passwordEncoder.encode(rawPassword);
     }
-
     public boolean matchesPassword(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
